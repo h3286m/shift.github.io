@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シフト管理・稼働状況ダッシュボード</title>
+    <title>シフト・競技スケジュール照合ボード</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -24,219 +24,80 @@
             <div class="w-full sm:w-auto text-center sm:text-left">
                 <h1 class="text-base sm:text-xl font-bold tracking-tight flex items-center justify-center sm:justify-start gap-2">
                     <svg class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>シフト稼働状況ダッシュボード</span>
+                    <span>シフト・競技スケジュール照合ボード</span>
                 </h1>
-                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">アーティスティックスイミング大会・練習シフト対応版</p>
+                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">アーティスティックスイミング大会対応・ガントチャート照合</p>
             </div>
-            <!-- Tab Navigation -->
-            <div class="flex w-full sm:w-auto bg-slate-800 p-1 rounded-lg border border-slate-700 overflow-x-auto">
-                <button onclick="switchTab('daily')" id="tab-daily" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition text-slate-300 hover:text-white text-center whitespace-nowrap">
-                    📅 日別サマリー
-                </button>
-                <button onclick="switchTab('staff')" id="tab-staff" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition text-slate-300 hover:text-white text-center whitespace-nowrap">
-                    👤 スタッフ別一覧
-                </button>
-                <button onclick="switchTab('gantt')" id="tab-gantt" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition bg-emerald-600 text-white shadow text-center whitespace-nowrap">
-                    📊 タイムライン(ガント)
-                </button>
+            <!-- Date Selector -->
+            <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                <label class="text-xs text-slate-300 font-semibold whitespace-nowrap">表示日:</label>
+                <select id="gantt-date-select" onchange="renderGanttChart()" class="bg-slate-900 text-white px-2 py-1 text-xs rounded border border-slate-600 focus:outline-none">
+                    <!-- Populated via JS -->
+                </select>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-6">
-        <!-- TAB 1: Daily Summary -->
-        <div id="view-daily" class="space-y-4 sm:space-y-6 hidden">
-            <!-- Controls / Filters -->
-            <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-                <div class="grid grid-cols-1 sm:flex sm:flex-wrap gap-2.5 sm:gap-3 items-center">
-                    <div class="w-full sm:w-auto">
-                        <label class="block text-[11px] font-semibold text-slate-500 mb-1">日付検索</label>
-                        <input type="text" id="filter-daily-date" placeholder="例: 09月14日" oninput="filterDailyTable()" class="w-full sm:w-auto px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div class="w-full sm:w-auto">
-                        <label class="block text-[11px] font-semibold text-slate-500 mb-1">時間帯フィルター</label>
-                        <select id="filter-daily-time" onchange="filterDailyTable()" class="w-full sm:w-auto px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="">すべて</option>
-                            <option value="08:00-14:30">08:00-14:30</option>
-                            <option value="10:00-18:00">10:00-18:00</option>
-                            <option value="13:30-21:30">13:30-21:30</option>
-                            <option value="10:00-21:30">10:00-21:30</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="text-xs sm:text-sm text-slate-500 text-right sm:text-left">
-                    表示件数: <span id="count-daily" class="font-bold text-slate-700"></span> 件
-                </div>
+        <!-- Legend & Status -->
+        <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex flex-wrap items-center gap-4">
+                <span class="font-bold text-slate-700">凡例:</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-indigo-600 rounded-sm inline-block"></span> 競技セッション</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-sky-500 rounded-sm inline-block"></span> 公式練習</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> 承諾スタッフ</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-400 rounded-sm inline-block"></span> 未回答スタッフ</span>
             </div>
-
-            <!-- Table -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse whitespace-nowrap sm:whitespace-normal" id="table-daily">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700 text-[11px] sm:text-xs uppercase tracking-wider border-b border-slate-200">
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 cursor-pointer hover:bg-slate-200 transition" onclick="sortDailyTable('日付')">日付 ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 cursor-pointer hover:bg-slate-200 transition" onclick="sortDailyTable('時間帯')">時間帯 ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 text-right cursor-pointer hover:bg-slate-200 transition text-emerald-700" onclick="sortDailyTable('承諾')">承諾 ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 text-right cursor-pointer hover:bg-slate-200 transition text-amber-700" onclick="sortDailyTable('未回答')">未回答 ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 text-right cursor-pointer hover:bg-slate-200 transition" onclick="sortDailyTable('合計')">合計 ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 text-center">稼働割合 (承諾 / 未回答)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 text-xs sm:text-sm" id="tbody-daily">
-                        </tbody>
-                    </table>
-                </div>
+            <div class="text-slate-500 text-[11px]">
+                ※スタッフ名クリックでメール起動✉
             </div>
         </div>
 
-        <!-- TAB 2: Staff Schedule -->
-        <div id="view-staff" class="space-y-4 sm:space-y-6 hidden">
-            <!-- Controls / Filters & Legend -->
-            <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-                    <div class="grid grid-cols-1 sm:flex sm:flex-wrap gap-2.5 sm:gap-3 items-center">
-                        <div class="w-full sm:w-auto">
-                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">スタッフ名検索</label>
-                            <input type="text" id="filter-staff-name" placeholder="例: 桑原" oninput="filterStaffTable()" class="w-full sm:w-auto px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <div class="w-full sm:w-auto">
-                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">日付フィルター</label>
-                            <input type="text" id="filter-staff-date" placeholder="例: 09月13日" oninput="filterStaffTable()" class="w-full sm:w-auto px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <div class="w-full sm:w-auto">
-                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">回答状況</label>
-                            <select id="filter-staff-status" onchange="filterStaffTable()" class="w-full sm:w-auto px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                                <option value="">すべて</option>
-                                <option value="承諾">承諾</option>
-                                <option value="未回答">未回答</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="text-xs sm:text-sm text-slate-500 text-right sm:text-left">
-                        表示件数: <span id="count-staff" class="font-bold text-slate-700"></span> 件
-                    </div>
-                </div>
+        <!-- Gantt Chart Container -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 overflow-hidden">
+            <div id="gantt-content" class="overflow-x-auto">
+                <!-- Rendered via JS -->
+            </div>
+        </div>
 
-                <!-- 英語能力の凡例 (Legend) -->
-                <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-slate-600">
-                    <span class="font-semibold text-slate-700 flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        英語能力の凡例:
+        <!-- 📌 運営分析・備考パネル -->
+        <div class="bg-gradient-to-br from-emerald-50 to-slate-50 rounded-xl shadow-sm border border-emerald-200 p-4 sm:p-6 space-y-4">
+            <h3 class="text-sm font-bold text-emerald-900 flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                📋 運営・シフト管理のポイント（自動インサイト）
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs space-y-1.5">
+                    <span class="font-bold text-slate-800 flex items-center gap-1.5 text-emerald-700">
+                        🔥 ピーク時間帯
                     </span>
-                    <span class="inline-flex items-center gap-1"><span class="text-slate-600 font-mono">★★★</span> ビジネス会話</span>
-                    <span class="inline-flex items-center gap-1"><span class="text-slate-600 font-mono">★★☆</span> 日常会話・接客</span>
-                    <span class="inline-flex items-center gap-1"><span class="text-slate-600 font-mono">★☆☆</span> 簡単な案内</span>
-                    <span class="inline-flex items-center gap-1"><span class="text-slate-300 font-mono">☆☆☆</span> なし</span>
-                    <span class="text-slate-400 ml-auto text-[10px]">※スタッフ名クリックでメール起動✉</span>
+                    <p class="text-slate-600 leading-relaxed">
+                        大会開催日（26日〜28日）は <b>10:00 〜 18:00</b> の時間帯にスタッフが集中し、公式練習や各種競技の進行を手厚くサポートする体制となっています。
+                    </p>
                 </div>
-            </div>
-
-            <!-- Table -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse whitespace-nowrap sm:whitespace-normal" id="table-staff">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700 text-[11px] sm:text-xs uppercase tracking-wider border-b border-slate-200">
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 cursor-pointer hover:bg-slate-200 transition" onclick="sortStaffTable('ID')">ID ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 cursor-pointer hover:bg-slate-200 transition" onclick="sortStaffTable('スタッフ名')">スタッフ名 (✉) ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 text-center cursor-pointer hover:bg-slate-200 transition" onclick="sortStaffTable('英語レベル')">英語 ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 cursor-pointer hover:bg-slate-200 transition" onclick="sortStaffTable('日付')">日付 ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 cursor-pointer hover:bg-slate-200 transition" onclick="sortStaffTable('時間帯')">時間帯 ↕</th>
-                                <th class="py-2.5 px-3 sm:py-3 sm:px-4 cursor-pointer hover:bg-slate-200 transition text-center" onclick="sortStaffTable('回答状況')">回答状況 ↕</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 text-xs sm:text-sm" id="tbody-staff">
-                        </tbody>
-                    </table>
+                <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs space-y-1.5">
+                    <span class="font-bold text-slate-800 flex items-center gap-1.5 text-amber-700">
+                        🔄 入れ替わり・重複帯
+                    </span>
+                    <p class="text-slate-600 leading-relaxed">
+                        早番と遅番が交差する <b>13:30 〜 14:30</b> 付近に最も人員が重なります。この時間帯を引き継ぎや昼食休憩のタイミングとして活用できます。
+                    </p>
                 </div>
-            </div>
-        </div>
-
-        <!-- TAB 3: Gantt / Timeline View -->
-        <div id="view-gantt" class="space-y-4 sm:space-y-6">
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <label class="text-xs font-semibold text-slate-600 whitespace-nowrap">表示する日付を選択:</label>
-                    <select id="gantt-date-select" onchange="renderGanttChart()" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-48 font-medium">
-                        <!-- Populated via JS -->
-                    </select>
-                </div>
-                <div class="text-xs text-slate-500 flex flex-wrap items-center gap-4">
-                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-indigo-600 rounded-sm inline-block"></span> 競技セッション</span>
-                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-sky-600 rounded-sm inline-block"></span> 公式練習</span>
-                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> 承諾スタッフ</span>
-                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-400 rounded-sm inline-block"></span> 未回答スタッフ</span>
-                </div>
-            </div>
-
-            <!-- Gantt Chart Container -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 overflow-hidden">
-                <div id="gantt-content" class="overflow-x-auto">
-                    <!-- Rendered via JS -->
-                </div>
-            </div>
-
-            <!-- 📌 運営分析・備考パネル (Insights & Notes) -->
-            <div class="bg-gradient-to-br from-emerald-50 to-slate-50 rounded-xl shadow-sm border border-emerald-200 p-4 sm:p-6 space-y-4">
-                <h3 class="text-sm font-bold text-emerald-900 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    📋 アーティスティックスイミング大会 運営ポイント・自動分析インサイト
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs space-y-1.5">
-                        <span class="font-bold text-slate-800 flex items-center gap-1.5 text-emerald-700">
-                            🔥 一番人が多い時間帯 (ピーク)
-                        </span>
-                        <p class="text-slate-600 leading-relaxed">
-                            大会開催日（26日〜28日）および練習日を含め、<b>10:00 〜 18:00</b> の時間帯に最も多くのスタッフ（最大10名超）が集中します。公式練習や各種ルーティン競技の進行に合わせた手厚い体制となっています。
-                        </p>
-                    </div>
-                    <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs space-y-1.5">
-                        <span class="font-bold text-slate-800 flex items-center gap-1.5 text-amber-700">
-                            🔄 スタッフの入れ替わり・重複帯
-                        </span>
-                        <p class="text-slate-600 leading-relaxed">
-                            早番（08:00〜）と遅番（13:30〜 / 16:00〜）が交差する <b>13:30 〜 14:30</b> に最も人員が重なります。競技の合間や昼食休憩・引き継ぎのタイミングとして非常に効率的な設計です。
-                        </p>
-                    </div>
-                    <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs space-y-1.5">
-                        <span class="font-bold text-slate-800 flex items-center gap-1.5 text-blue-700">
-                            ⏳ 6時間以上勤務のコアスタッフ
-                        </span>
-                        <p class="text-slate-600 leading-relaxed">
-                            大会期間中、8時間フルタイム（例: 08:00-14:30 や 10:00-18:00、八木さんの10:00-20:30など）を担当するコアメンバーが多数います。長時間の立ち仕事になるため、適宜お昼や小休憩のローテーションにお役立てください。
-                        </p>
-                    </div>
+                <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs space-y-1.5">
+                    <span class="font-bold text-slate-800 flex items-center gap-1.5 text-blue-700">
+                        ⏳ 長時間勤務スタッフ
+                    </span>
+                    <p class="text-slate-600 leading-relaxed">
+                        6〜8時間のフルタイム勤務を担当するメンバーが多数います。長時間の立ち仕事になるため、こまめな小休憩のローテーションを組むことをお勧めします。
+                    </p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- JavaScript for Interactivity & Gantt -->
+    <!-- JavaScript for Gantt & Interactivity -->
     <script>
-        const dailyData = [{"日付": "09月12日", "時間帯": "08:00-14:30", "承諾": 0, "未回答": 2, "合計": 2}, {"日付": "09月12日", "時間帯": "10:00-18:00", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "09月12日", "時間帯": "13:30-21:30", "承諾": 0, "未回答": 2, "合計": 2}, {"日付": "09月13日", "時間帯": "08:00-14:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月13日", "時間帯": "10:00-18:00", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月13日", "時間帯": "13:30-21:30", "承諾": 2, "未回答": 1, "合計": 3}, {"日付": "09月14日", "時間帯": "08:00-14:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月14日", "時間帯": "10:00-18:00", "承諾": 3, "未回答": 0, "合計": 3}, {"日付": "09月14日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "09月15日", "時間帯": "08:00-14:30", "承諾": 2, "未回答": 0, "合計": 2}, {"日付": "09月15日", "時間帯": "10:00-18:00", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "09月15日", "時間帯": "13:30-21:30", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "09月16日", "時間帯": "08:00-14:30", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "09月16日", "時間帯": "10:00-11:00, 13:30〜", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月16日", "時間帯": "10:00-18:00", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月16日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "09月17日", "時間帯": "10:00-18:00", "承諾": 0, "未回答": 2, "合計": 2}, {"日付": "09月17日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "09月18日", "時間帯": "08:00-14:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月18日", "時間帯": "10:00-18:00", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "09月18日", "時間帯": "13:30-21:30", "承諾": 0, "未回答": 3, "合計": 3}, {"日付": "09月19日", "時間帯": "10:00-18:00", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "09月19日", "時間帯": "13:30-21:30", "承諾": 2, "未回答": 1, "合計": 3}, {"日付": "09月20日", "時間帯": "10:00-18:00", "承諾": 2, "未回答": 1, "合計": 3}, {"日付": "09月20日", "時間帯": "13:30-21:30", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "09月21日", "時間帯": "10:00-18:00", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "09月21日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 3, "合計": 4}, {"日付": "09月22日", "時間帯": "08:00-14:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月22日", "時間帯": "10:00-18:00", "承諾": 2, "未回答": 0, "合計": 2}, {"日付": "09月22日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月23日", "時間帯": "08:00-14:30", "承諾": 1, "未回答": 2, "合計": 3}, {"日付": "09月23日", "時間帯": "10:00-18:00", "承諾": 3, "未回答": 1, "合計": 4}, {"日付": "09月23日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月24日", "時間帯": "08:00-14:30", "承諾": 2, "未回答": 0, "合計": 2}, {"日付": "09月24日", "時間帯": "10:00-18:00", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月24日", "時間帯": "13:30-21:30", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "09月25日", "時間帯": "08:00-14:30", "承諾": 3, "未回答": 0, "合計": 3}, {"日付": "09月25日", "時間帯": "10:00-13:00", "承諾": 2, "未回答": 0, "合計": 2}, {"日付": "09月25日", "時間帯": "10:00-13:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月25日", "時間帯": "10:00-20:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月25日", "時間帯": "13:30-18:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月25日", "時間帯": "15:00-19:00", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月25日", "時間帯": "16:00-19:00", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月26日", "時間帯": "08:00-14:30", "承諾": 3, "未回答": 0, "合計": 3}, {"日付": "09月26日", "時間帯": "10:00-13:00", "承諾": 2, "未回答": 0, "合計": 2}, {"日付": "09月26日", "時間帯": "10:00-13:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月26日", "時間帯": "10:00-20:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月26日", "時間帯": "13:30-18:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月26日", "時間帯": "15:00-19:00", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月26日", "時間帯": "16:00-19:00", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月27日", "時間帯": "08:00-14:30", "承諾": 5, "未回答": 6, "合計": 11}, {"日付": "09月27日", "時間帯": "10:00-18:00", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "09月27日", "時間帯": "10:00-21:30", "承諾": 3, "未回答": 2, "合計": 5}, {"日付": "09月27日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月27日", "時間帯": "セレモニーボランティア", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月28日", "時間帯": "08:00-14:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月28日", "時間帯": "10:00-14:00", "承諾": 3, "未回答": 0, "合計": 3}, {"日付": "09月28日", "時間帯": "10:00-17:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月28日", "時間帯": "10:00-18:00", "承諾": 3, "未回答": 0, "合計": 3}, {"日付": "09月28日", "時間帯": "10:00-20:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月28日", "時間帯": "セレモニーボランティア", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月29日", "時間帯": "10:00-18:00", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "09月29日", "時間帯": "13:30-21:30", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "09月30日", "時間帯": "08:00-14:30", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "09月30日", "時間帯": "10:00-18:00", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "09月30日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "10月01日", "時間帯": "08:00-14:30", "承諾": 0, "未回答": 2, "合計": 2}, {"日付": "10月01日", "時間帯": "10:00-18:00", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "10月01日", "時間帯": "13:30-21:30", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "10月02日", "時間帯": "08:00-14:30", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "10月02日", "時間帯": "10:00-18:00", "承諾": 2, "未回答": 2, "合計": 4}, {"日付": "10月02日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 1, "合計": 2}, {"日付": "10月03日", "時間帯": "08:00-14:30", "承諾": 0, "未回答": 1, "合計": 1}, {"日付": "10月03日", "時間帯": "10:00-18:00", "承諾": 2, "未回答": 1, "合計": 3}, {"日付": "10月03日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "10月04日", "時間帯": "08:00-14:30", "承諾": 1, "未回答": 0, "合計": 1}, {"日付": "10月04日", "時間帯": "10:00-18:00", "承諾": 0, "未回答": 2, "合計": 2}, {"日付": "10月04日", "時間帯": "13:30-21:30", "承諾": 0, "未回答": 2, "合計": 2}, {"日付": "10月05日", "時間帯": "10:00-18:00", "承諾": 0, "未回答": 2, "合計": 2}, {"日付": "10月05日", "時間帯": "13:30-21:30", "承諾": 1, "未回答": 1, "合計": 2}];
-        const staffData = [{"ID": "212", "スタッフ名": "桑原 隆", "メールアドレス": "tett12112907@i.softbank.jp", "英語レベル": 2, "日付": "09月12日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "212", "スタッフ名": "桑原 隆", "メールアドレス": "tett12112907@i.softbank.jp", "英語レベル": 2, "日付": "09月13日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "212", "スタッフ名": "桑原 隆", "メールアドレス": "tett12112907@i.softbank.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "1034", "スタッフ名": "須永 修", "メールアドレス": "tao_smg@icloud.com", "英語レベル": 3, "日付": "09月14日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "1034", "スタッフ名": "須永 修", "メールアドレス": "tao_smg@icloud.com", "英語レベル": 3, "日付": "09月29日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "1116", "スタッフ名": "池谷 敦代", "メールアドレス": "ike-toto-eme-101146-chan-chan@disney.ne.jp", "英語レベル": 1, "日付": "09月14日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "1116", "スタッフ名": "池谷 敦代", "メールアドレス": "ike-toto-eme-101146-chan-chan@disney.ne.jp", "英語レベル": 1, "日付": "09月24日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "1116", "スタッフ名": "池谷 敦代", "メールアドレス": "ike-toto-eme-101146-chan-chan@disney.ne.jp", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "1116", "スタッフ名": "池谷 敦代", "メールアドレス": "ike-toto-eme-101146-chan-chan@disney.ne.jp", "英語レベル": 1, "日付": "09月23日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "1386", "スタッフ名": "森川 重一", "メールアドレス": "shigemorikawa@yahoo.co.jp", "英語レベル": 2, "日付": "09月15日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "1386", "スタッフ名": "森川 重一", "メールアドレス": "shigemorikawa@yahoo.co.jp", "英語レベル": 2, "日付": "09月22日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "1386", "スタッフ名": "森川 重一", "メールアドレス": "shigemorikawa@yahoo.co.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月12日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "10月03日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "10月04日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "2740", "スタッフ名": "樋口 京一", "メールアドレス": "abidpk9967@yahoo.ne.jp", "英語レベル": 0, "日付": "09月12日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "2740", "スタッフ名": "樋口 京一", "メールアドレス": "abidpk9967@yahoo.ne.jp", "英語レベル": 0, "日付": "09月14日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "2740", "スタッフ名": "樋口 京一", "メールアドレス": "abidpk9967@yahoo.ne.jp", "英語レベル": 0, "日付": "09月20日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "2740", "スタッフ名": "樋口 京一", "メールアドレス": "abidpk9967@yahoo.ne.jp", "英語レベル": 0, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "未回答"}, {"ID": "2740", "スタッフ名": "樋口 京一", "メールアドレス": "abidpk9967@yahoo.ne.jp", "英語レベル": 0, "日付": "10月04日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "2740", "スタッフ名": "樋口 京一", "メールアドレス": "abidpk9967@yahoo.ne.jp", "英語レベル": 0, "日付": "10月05日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "3547", "スタッフ名": "進士 尚彦", "メールアドレス": "yuzutaro1995@gmail.com", "英語レベル": 1, "日付": "10月02日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "3896", "スタッフ名": "小木 嘉男", "メールアドレス": "lefty.o.3rd@gmail.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "承諾"}, {"ID": "4213", "スタッフ名": "宇田 真彦", "メールアドレス": "m21339170u@gmail.com", "英語レベル": 3, "日付": "09月15日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "4213", "スタッフ名": "宇田 真彦", "メールアドレス": "m21339170u@gmail.com", "英語レベル": 3, "日付": "09月23日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "4213", "スタッフ名": "宇田 真彦", "メールアドレス": "m21339170u@gmail.com", "英語レベル": 3, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "5091", "スタッフ名": "石塚 茂雄", "メールアドレス": "grottokeitai@gmail.com", "英語レベル": 1, "日付": "09月15日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "5268", "スタッフ名": "玉木 幸子", "メールアドレス": "tamago_228_1969@yahoo.co.jp", "英語レベル": 2, "日付": "09月23日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月16日", "時間帯": "10:00-11:00, 13:30〜", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月23日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "セレモニーボランティア", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月30日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "7141", "スタッフ名": "長谷 正明", "メールアドレス": "m-1126st@i.softbank.jp", "英語レベル": 1, "日付": "09月12日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "7141", "スタッフ名": "長谷 正明", "メールアドレス": "m-1126st@i.softbank.jp", "英語レベル": 1, "日付": "09月15日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "7141", "スタッフ名": "長谷 正明", "メールアドレス": "m-1126st@i.softbank.jp", "英語レベル": 1, "日付": "09月20日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "7141", "スタッフ名": "長谷 正明", "メールアドレス": "m-1126st@i.softbank.jp", "英語レベル": 1, "日付": "10月04日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "7928", "スタッフ名": "古井  良周", "メールアドレス": "yfurui1985bmw@yahoo.co.jp", "英語レベル": 0, "日付": "09月12日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "7928", "スタッフ名": "古井  良周", "メールアドレス": "yfurui1985bmw@yahoo.co.jp", "英語レベル": 0, "日付": "09月15日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "7953", "スタッフ名": "敦賀 恭子", "メールアドレス": "k.lemon.707.sea.dive@gmail.com", "英語レベル": 2, "日付": "09月16日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "7953", "スタッフ名": "敦賀 恭子", "メールアドレス": "k.lemon.707.sea.dive@gmail.com", "英語レベル": 2, "日付": "09月24日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "12097", "スタッフ名": "宮本 陽介", "メールアドレス": "y.miyamoto2784@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "12097", "スタッフ名": "宮本 陽介", "メールアドレス": "y.miyamoto2784@gmail.com", "英語レベル": 1, "日付": "10月01日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "12975", "スタッフ名": "横井 真理子", "メールアドレス": "marikon-kon@docomo.ne.jp", "英語レベル": 3, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "12976", "スタッフ名": "橋本 玉美", "メールアドレス": "tata117yn@docomo.ne.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "13032", "スタッフ名": "飯田 渚月", "メールアドレス": "nattsu0905@docomo.ne.jp", "英語レベル": 1, "日付": "09月17日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "13032", "スタッフ名": "飯田 渚月", "メールアドレス": "nattsu0905@docomo.ne.jp", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "14573", "スタッフ名": "中島 勝利", "メールアドレス": "nakajima030523@icloud.com", "英語レベル": 0, "日付": "09月12日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "14573", "スタッフ名": "中島 勝利", "メールアドレス": "nakajima030523@icloud.com", "英語レベル": 0, "日付": "09月16日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "14573", "スタッフ名": "中島 勝利", "メールアドレス": "nakajima030523@icloud.com", "英語レベル": 0, "日付": "10月04日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "14574", "スタッフ名": "松浦 佳音", "メールアドレス": "kanon.1911k@ezweb.ne.jp", "英語レベル": 1, "日付": "09月17日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "14574", "スタッフ名": "松浦 佳音", "メールアドレス": "kanon.1911k@ezweb.ne.jp", "英語レベル": 1, "日付": "09月24日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "14574", "スタッフ名": "松浦 佳音", "メールアドレス": "kanon.1911k@ezweb.ne.jp", "英語レベル": 1, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "未回答"}, {"ID": "14574", "スタッフ名": "松浦 佳音", "メールアドレス": "kanon.1911k@ezweb.ne.jp", "英語レベル": 1, "日付": "10月01日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "15292", "スタッフ名": "坂戸 夏子", "メールアドレス": "natsu737@gmail.com", "英語レベル": 2, "日付": "09月17日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "15884", "スタッフ名": "福井 竜暉", "メールアドレス": "ryu.f0226@gmail.com", "英語レベル": 2, "日付": "09月18日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "15884", "スタッフ名": "福井 竜暉", "メールアドレス": "ryu.f0226@gmail.com", "英語レベル": 2, "日付": "10月01日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "16085", "スタッフ名": "山本 政夫", "メールアドレス": "masao.yamamoto@nifty.com", "英語レベル": 0, "日付": "10月05日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "17600", "スタッフ名": "鈴木 久江", "メールアドレス": "scrum138@gmail.com", "英語レベル": 1, "日付": "09月18日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "17600", "スタッフ名": "鈴木 久江", "メールアドレス": "scrum138@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "17600", "スタッフ名": "鈴木 久江", "メールアドレス": "scrum138@gmail.com", "英語レベル": 1, "日付": "09月29日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "18676", "スタッフ名": "SHARIMAN AIMANSYAKIR", "メールアドレス": "aiman310701@gmail.com", "英語レベル": 3, "日付": "09月18日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "18676", "スタッフ名": "SHARIMAN AIMANSYAKIR", "メールアドレス": "aiman310701@gmail.com", "英語レベル": 3, "日付": "09月30日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "18773", "スタッフ名": "DZULKIFELI MUHAMMAD", "メールアドレス": "farid.dzulkifeli@gmail.com", "英語レベル": 3, "日付": "09月18日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "18773", "スタッフ名": "DZULKIFELI MUHAMMAD", "メールアドレス": "farid.dzulkifeli@gmail.com", "英語レベル": 3, "日付": "10月01日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "18773", "スタッフ名": "DZULKIFELI MUHAMMAD", "メールアドレス": "farid.dzulkifeli@gmail.com", "英語レベル": 3, "日付": "10月02日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "19888", "スタッフ名": "中根 辰也", "メールアドレス": "nakaneeddie@yahoo.co.jp", "英語レベル": 1, "日付": "09月19日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "19888", "スタッフ名": "中根 辰也", "メールアドレス": "nakaneeddie@yahoo.co.jp", "英語レベル": 1, "日付": "10月02日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "19888", "スタッフ名": "中根 辰也", "メールアドレス": "nakaneeddie@yahoo.co.jp", "英語レベル": 1, "日付": "10月03日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "21384", "スタッフ名": "JALIL AZNY", "メールアドレス": "aznyjalil0211@gmail.com", "英語レベル": 3, "日付": "09月19日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "21384", "スタッフ名": "JALIL AZNY", "メールアドレス": "aznyjalil0211@gmail.com", "英語レベル": 3, "日付": "09月30日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "21384", "スタッフ名": "JALIL AZNY", "メールアドレス": "aznyjalil0211@gmail.com", "英語レベル": 3, "日付": "10月02日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "21640", "スタッフ名": "MDAKHIR AFFAF", "メールアドレス": "affafbusyraaa@gmail.com", "英語レベル": 3, "日付": "10月02日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "メールアドレス": "hiro0047@hotmail.com", "英語レベル": 1, "日付": "09月13日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "メールアドレス": "hiro0047@hotmail.com", "英語レベル": 1, "日付": "09月17日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "メールアドレス": "hiro0047@hotmail.com", "英語レベル": 1, "日付": "10月04日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "27557", "スタッフ名": "青木 基泰", "メールアドレス": "mokky.8750.128@gmail.com", "英語レベル": 2, "日付": "09月13日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "27557", "スタッフ名": "青木 基泰", "メールアドレス": "mokky.8750.128@gmail.com", "英語レベル": 2, "日付": "09月16日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "27557", "スタッフ名": "青木 基泰", "メールアドレス": "mokky.8750.128@gmail.com", "英語レベル": 2, "日付": "09月21日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月13日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月16日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月21日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月27日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "10月05日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "29253", "スタッフ名": "鈴木 麻彩香", "メールアドレス": "azuma0104asaka@gmail.com", "英語レベル": 1, "日付": "09月19日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "29253", "スタッフ名": "鈴木 麻彩香", "メールアドレス": "azuma0104asaka@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "29253", "スタッフ名": "鈴木 麻彩香", "メールアドレス": "azuma0104asaka@gmail.com", "英語レベル": 1, "日付": "09月30日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "29253", "スタッフ名": "鈴木 麻彩香", "メールアドレス": "azuma0104asaka@gmail.com", "英語レベル": 1, "日付": "10月02日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "29253", "スタッフ名": "鈴木 麻彩香", "メールアドレス": "azuma0104asaka@gmail.com", "英語レベル": 1, "日付": "10月03日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "37282", "スタッフ名": "八木 竣", "メールアドレス": "goatsyun1924@gmail.com", "英語レベル": 2, "日付": "10月05日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月18日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月20日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月21日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月23日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月14日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月19日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月20日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月22日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月23日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月24日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月30日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "10月02日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "10月03日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "38513", "スタッフ名": "水谷 幸枝", "メールアドレス": "tada_kumada@milk.tnc.ne.jp", "英語レベル": 1, "日付": "10月03日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "38547", "スタッフ名": "大海 充輝", "メールアドレス": "mickey0307006@gmail.com", "英語レベル": 0, "日付": "09月21日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "38547", "スタッフ名": "大海 充輝", "メールアドレス": "mickey0307006@gmail.com", "英語レベル": 0, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "39725", "スタッフ名": "橋本 昌美", "メールアドレス": "masami041519@icloud.com", "英語レベル": 2, "日付": "09月13日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "39725", "スタッフ名": "橋本 昌美", "メールアドレス": "masami041519@icloud.com", "英語レベル": 2, "日付": "09月19日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "39725", "スタッフ名": "橋本 昌美", "メールアドレス": "masami041519@icloud.com", "英語レベル": 2, "日付": "09月21日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "39880", "スタッフ名": "佐伯 美侑", "メールアドレス": "ohifam2528@gmail.com", "英語レベル": 1, "日付": "09月14日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "39880", "スタッフ名": "佐伯 美侑", "メールアドレス": "ohifam2528@gmail.com", "英語レベル": 1, "日付": "09月21日", "時間帯": "13:30-21:30", "回答状況": "未回答"}, {"ID": "39880", "スタッフ名": "佐伯 美侑", "メールアドレス": "ohifam2528@gmail.com", "英語レベル": 1, "日付": "09月22日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "39880", "スタッフ名": "佐伯 美侑", "メールアドレス": "ohifam2528@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月14日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月22日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月23日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "40098", "スタッフ名": "田光 優奈", "メールアドレス": "takouyuna@outlook.jp", "英語レベル": 0, "日付": "09月23日", "時間帯": "10:00-18:00", "回答状況": "未回答"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "時間帯": "10:00-13:00", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "日付": "09月25日"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "masaki.1222@icloud.com", "日付": "09月25日"}, {"ID": "7928", "スタッフ名": "古井  良周", "時間帯": "10:00-13:00", "回答状況": "承諾", "英語レベル": 0, "メールアドレス": "yfurui1985bmw@yahoo.co.jp", "日付": "09月25日"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "時間帯": "16:00-19:00", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "hiro0047@hotmail.com", "日付": "09月25日"}, {"ID": "27557", "スタッフ名": "青木 基泰", "時間帯": "10:00-13:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "mokky.8750.128@gmail.com", "日付": "09月25日"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "時間帯": "15:00-19:00", "回答状況": "承諾", "英語レベル": 0, "メールアドレス": "gomyway1207@yahoo.co.jp", "日付": "09月25日"}, {"ID": "37282", "スタッフ名": "八木 竣", "時間帯": "10:00-20:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "goatsyun1924@gmail.com", "日付": "09月25日"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "qingjia0129@gmail.com", "日付": "09月25日"}, {"ID": "38513", "スタッフ名": "水谷 幸枝", "時間帯": "13:30-18:30", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "tada_kumada@milk.tnc.ne.jp", "日付": "09月25日"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "kanokanokanomi@gmail.com", "日付": "09月25日"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "時間帯": "10:00-13:00", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "日付": "09月26日"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "masaki.1222@icloud.com", "日付": "09月26日"}, {"ID": "7928", "スタッフ名": "古井  良周", "時間帯": "10:00-13:00", "回答状況": "承諾", "英語レベル": 0, "メールアドレス": "yfurui1985bmw@yahoo.co.jp", "日付": "09月26日"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "時間帯": "16:00-19:00", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "hiro0047@hotmail.com", "日付": "09月26日"}, {"ID": "27557", "スタッフ名": "青木 基泰", "時間帯": "10:00-13:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "mokky.8750.128@gmail.com", "日付": "09月26日"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "時間帯": "15:00-19:00", "回答状況": "承諾", "英語レベル": 0, "メールアドレス": "gomyway1207@yahoo.co.jp", "日付": "09月26日"}, {"ID": "37282", "スタッフ名": "八木 竣", "時間帯": "10:00-20:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "goatsyun1924@gmail.com", "日付": "09月26日"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "qingjia0129@gmail.com", "日付": "09月26日"}, {"ID": "38513", "スタッフ名": "水谷 幸枝", "時間帯": "13:30-18:30", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "tada_kumada@milk.tnc.ne.jp", "日付": "09月26日"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "kanokanokanomi@gmail.com", "日付": "09月26日"}, {"ID": "212", "スタッフ名": "桑原 隆", "時間帯": "10:00-14:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "tett12112907@i.softbank.jp", "日付": "09月27日"}, {"ID": "1116", "スタッフ名": "池谷 敦代", "時間帯": "10:00-17:30", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "ike-toto-eme-101146-chan-chan@disney.ne.jp", "日付": "09月27日"}, {"ID": "1386", "スタッフ名": "森川 重一", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "shigemorikawa@yahoo.co.jp", "日付": "09月27日"}, {"ID": "3896", "スタッフ名": "小木 嘉男", "時間帯": "10:00-16:00", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "lefty.o.3rd@gmail.com", "日付": "09月27日"}, {"ID": "4213", "スタッフ名": "宇田 真彦", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 3, "メールアドレス": "m21339170u@gmail.com", "日付": "09月27日"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "masaki.1222@icloud.com", "日付": "09月27日"}, {"ID": "12097", "スタッフ名": "宮本 陽介", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "y.miyamoto2784@gmail.com", "日付": "09月27日"}, {"ID": "12976", "スタッフ名": "橋本 玉美", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "tata117yn@docomo.ne.jp", "日付": "09月27日"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "時間帯": "15:00-19:00", "回答状況": "承諾", "英語レベル": 0, "メールアドレス": "gomyway1207@yahoo.co.jp", "日付": "09月27日"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "時間帯": "10:00-19:30", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "qingjia0129@gmail.com", "日付": "09月27日"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "時間帯": "15:00-18:00", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "kanokanokanomi@gmail.com", "日付": "09月27日"}, {"ID": "1116", "スタッフ名": "池谷 敦代", "時間帯": "10:00-17:30", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "ike-toto-eme-101146-chan-chan@disney.ne.jp", "日付": "09月28日"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "時間帯": "10:00-14:00", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "日付": "09月28日"}, {"ID": "3896", "スタッフ名": "小木 嘉男", "時間帯": "10:00-14:00", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "lefty.o.3rd@gmail.com", "日付": "09月28日"}, {"ID": "7953", "スタッフ名": "敦賀 恭子", "時間帯": "10:00-18:00", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "k.lemon.707.sea.dive@gmail.com", "日付": "09月28日"}, {"ID": "12975", "スタッフ名": "横井 真理子", "時間帯": "10:00-18:00", "回答状況": "承諾", "英語レベル": 3, "メールアドレス": "marikon-kon@docomo.ne.jp", "日付": "09月28日"}, {"ID": "12976", "スタッフ名": "橋本 玉美", "時間帯": "10:00-18:00", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "tata117yn@docomo.ne.jp", "日付": "09月28日"}, {"ID": "24184", "スタッフ名": "LEONG WEIEN", "時間帯": "10:00-20:30", "回答状況": "承諾", "英語レベル": 3, "メールアドレス": "hengsleong@gmail.com", "日付": "09月28日"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "時間帯": "08:00-14:30", "回答状況": "承諾", "英語レベル": 1, "メールアドレス": "qingjia0129@gmail.com", "日付": "09月28日"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "時間帯": "10:00-14:00", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "kanokanokanomi@gmail.com", "日付": "09月28日"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "時間帯": "セレモニーボランティア", "回答状況": "承諾", "英語レベル": 2, "メールアドレス": "masaki.1222@icloud.com", "日付": "09月28日"}];
-
-        let currentDaily = [...dailyData];
-        let currentStaff = [...staffData];
-
-        let dailySortCol = '日付';
-        let dailySortAsc = true;
-        let staffSortCol = '日付';
-        let staffSortAsc = true;
-
-        function switchTab(tab) {
-            ['daily', 'staff', 'gantt'].forEach(t => {
-                document.getElementById('view-' + t).classList.add('hidden');
-                document.getElementById('tab-' + t).className = 'flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition text-slate-300 hover:text-white text-center whitespace-nowrap';
-            });
-            document.getElementById('view-' + tab).classList.remove('hidden');
-            document.getElementById('tab-' + tab).className = 'flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition bg-emerald-600 text-white shadow text-center whitespace-nowrap';
-            if (tab === 'gantt') renderGanttChart();
-        }
-
         const competitionSchedules = {
             "09月25日": [
                 {name: "公式練習 (Official Practice)", start: "09:30", end: "18:00", type: "practice"}
@@ -261,6 +122,8 @@
             ]
         };
 
+        const staffData = [{"ID": "212", "スタッフ名": "桑原 隆", "メールアドレス": "tett12112907@i.softbank.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "1116", "スタッフ名": "池谷 敦代", "メールアドレス": "ike-toto-eme-101146-chan-chan@disney.ne.jp", "英語レベル": 1, "日付": "09月28日", "時間帯": "10:00-17:30", "回答状況": "承諾"}, {"ID": "1386", "スタッフ名": "森川 重一", "メールアドレス": "shigemorikawa@yahoo.co.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月28日", "時間帯": "10:00-14:00", "回答状況": "承諾"}, {"ID": "2740", "スタッフ名": "樋口 京一", "メールアドレス": "abidpk9967@yahoo.ne.jp", "英語レベル": 0, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "未回答"}, {"ID": "3896", "スタッフ名": "小木 嘉男", "メールアドレス": "lefty.o.3rd@gmail.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-14:00", "回答状況": "承諾"}, {"ID": "4213", "スタッフ名": "宇田 真彦", "メールアドレス": "m21339170u@gmail.com", "英語レベル": 3, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "セレモニーボランティア", "回答状況": "承諾"}, {"ID": "7953", "スタッフ名": "敦賀 恭子", "メールアドレス": "k.lemon.707.sea.dive@gmail.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "12097", "スタッフ名": "宮本 陽介", "メールアドレス": "y.miyamoto2784@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "12975", "スタッフ名": "横井 真理子", "メールアドレス": "marikon-kon@docomo.ne.jp", "英語レベル": 3, "日付": "09月28日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "12976", "スタッフ名": "橋本 玉美", "メールアドレス": "tata117yn@docomo.ne.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "12976", "スタッフ名": "橋本 玉美", "メールアドレス": "tata117yn@docomo.ne.jp", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "13032", "スタッフ名": "飯田 渚月", "メールアドレス": "nattsu0905@docomo.ne.jp", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "14574", "スタッフ名": "松浦 佳音", "メールアドレス": "kanon.1911k@ezweb.ne.jp", "英語レベル": 1, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "未回答"}, {"ID": "17600", "スタッフ名": "鈴木 久江", "メールアドレス": "scrum138@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月27日", "時間帯": "15:00-19:00", "回答状況": "承諾"}, {"ID": "29253", "スタッフ名": "鈴木 麻彩香", "メールアドレス": "azuma0104asaka@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "10:00-19:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月28日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "承諾"}, {"ID": "38547", "スタッフ名": "大海 充輝", "メールアドレス": "mickey0307006@gmail.com", "英語レベル": 0, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "39880", "スタッフ名": "佐伯 美侑", "メールアドレス": "ohifam2528@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "15:00-18:00", "回答状況": "承諾"}, {"ID": "24184", "スタッフ名": "LEONG WEIEN", "メールアドレス": "hengsleong@gmail.com", "英語レベル": 3, "日付": "09月28日", "時間帯": "10:00-20:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-14:00", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月25日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "7928", "スタッフ名": "古井  良周", "メールアドレス": "yfurui1985bmw@yahoo.co.jp", "英語レベル": 0, "日付": "09月25日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "メールアドレス": "hiro0047@hotmail.com", "英語レベル": 1, "日付": "09月25日", "時間帯": "16:00-19:00", "回答状況": "承諾"}, {"ID": "27557", "スタッフ名": "青木 基泰", "メールアドレス": "mokky.8750.128@gmail.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "10:00-13:30", "回答状況": "承諾"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月25日", "時間帯": "15:00-19:00", "回答状況": "承諾"}, {"ID": "37282", "スタッフ名": "八木 竣", "メールアドレス": "goatsyun1924@gmail.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "10:00-20:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月25日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38513", "スタッフ名": "水谷 幸枝", "メールアドレス": "tada_kumada@milk.tnc.ne.jp", "英語レベル": 1, "日付": "09月25日", "時間帯": "13:30-18:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月26日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "7928", "スタッフ名": "古井  良周", "メールアドレス": "yfurui1985bmw@yahoo.co.jp", "英語レベル": 0, "日付": "09月26日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "メールアドレス": "hiro0047@hotmail.com", "英語レベル": 1, "日付": "09月26日", "時間帯": "16:00-19:00", "回答状況": "承諾"}, {"ID": "27557", "スタッフ名": "青木 基泰", "メールアドレス": "mokky.8750.128@gmail.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "10:00-13:30", "回答状況": "承諾"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月26日", "時間帯": "15:00-19:00", "回答状況": "承諾"}, {"ID": "37282", "スタッフ名": "八木 竣", "メールアドレス": "goatsyun1924@gmail.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "10:00-20:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月26日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38513", "スタッフ名": "水谷 幸枝", "メールアドレス": "tada_kumada@milk.tnc.ne.jp", "英語レベル": 1, "日付": "09月26日", "時間帯": "13:30-18:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "08:00-14:30", "回答状況": "承諾"}];
+
         function initGanttDates() {
             const select = document.getElementById('gantt-date-select');
             const dates = [...new Set(staffData.map(s => s.日付))].sort();
@@ -282,11 +145,6 @@
             
             const dayStaff = staffData.filter(s => s.日付 === dateVal);
             const dayComps = competitionSchedules[dateVal] || [];
-            
-            if (dayStaff.length === 0 && dayComps.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">この日のスケジュールデータはありません。</div>`;
-                return;
-            }
 
             const hours = [];
             for (let h = 7; h <= 22; h++) {
@@ -296,6 +154,7 @@
 
             let html = `<div class="min-w-[850px]">`;
             
+            // Header
             html += `<div class="flex border-b border-slate-200 pb-2 mb-2 items-center text-xs font-semibold text-slate-500">`;
             html += `<div class="w-52 shrink-0 px-3">スケジュール / スタッフ名</div>`;
             html += `<div class="flex-1 grid grid-cols-31 text-center text-[10px]">`;
@@ -306,10 +165,10 @@
             }
             html += `</div></div>`;
 
-            // 1. Competition / Practice Events Section
+            // 1. Competition & Practice Schedule Section
             if (dayComps.length > 0) {
-                html += `<div class="mb-4 pb-3 border-b border-dashed border-slate-200 space-y-1.5">`;
-                html += `<div class="text-[11px] font-bold text-sky-800 px-3 mb-1 flex items-center gap-1.5">🏊 競技・練習スケジュール (デイリーランシート基準)</div>`;
+                html += `<div class="mb-4 pb-3 border-b-2 border-indigo-100 space-y-1.5">`;
+                html += `<div class="text-[11px] font-bold text-indigo-900 px-3 mb-1 flex items-center gap-1.5">🏊 デイリーランシート（競技・練習スケジュール）</div>`;
                 dayComps.forEach(comp => {
                     const [sh, sm] = comp.start.split(':').map(Number);
                     const [eh, em] = comp.end.split(':').map(Number);
@@ -319,14 +178,14 @@
                     const leftPct = ((sMins - 420) / (1320 - 420)) * 100;
                     const widthPct = ((eMins - sMins) / (1320 - 420)) * 100;
 
-                    let badgeBg = 'bg-sky-600 text-white';
+                    let badgeBg = 'bg-sky-500 text-white';
                     if (comp.type === 'competition') badgeBg = 'bg-indigo-600 text-white';
                     if (comp.type === 'ceremony') badgeBg = 'bg-rose-600 text-white';
 
-                    html += `<div class="flex items-center text-xs py-1 rounded bg-sky-50/50">`;
-                    html += `<div class="w-52 shrink-0 px-3 font-medium text-sky-900 truncate">${comp.name}</div>`;
+                    html += `<div class="flex items-center text-xs py-1 rounded bg-indigo-50/40">`;
+                    html += `<div class="w-52 shrink-0 px-3 font-semibold text-indigo-950 truncate">${comp.name}</div>`;
                     html += `<div class="flex-1 relative h-6 bg-transparent flex items-center px-1">`;
-                    html += `<div style="left: ${leftPct}%; width: ${widthPct}%;" class="absolute h-5 rounded ${badgeBg} shadow-xs flex items-center px-2 text-[10px] font-bold tracking-tight whitespace-nowrap overflow-hidden">
+                    html += `<div style="left: ${leftPct}%; width: ${widthPct}%;" class="absolute h-5 rounded ${badgeBg} shadow-xs flex items-center px-2 text-[10px] font-bold tracking-tight whitespace-nowrap overflow-hidden z-10">
                                 ${comp.start} - ${comp.end}
                              </div>`;
                     html += `</div></div>`;
@@ -334,10 +193,14 @@
                 html += `</div>`;
             }
 
-            // 2. Staff Shifts Section (with distinct Accepted vs Unanswered colors)
-            html += `<div class="text-[11px] font-bold text-slate-700 px-3 mb-2 flex items-center gap-1.5">👥 ボランティアスタッフ稼働状況 (承諾 / 未回答)</div>`;
+            // 2. Staff Shifts Section (Split by Accepted vs Unanswered)
+            html += `<div class="text-[11px] font-bold text-slate-700 px-3 mb-2 flex items-center gap-1.5">👥 ボランティアスタッフ稼働状況（ガントチャート照合）</div>`;
             html += `<div class="space-y-2">`;
             
+            if (dayStaff.length === 0) {
+                html += `<div class="text-center py-4 text-slate-400 text-xs">この日のスタッフシフト登録はありません。</div>`;
+            }
+
             dayStaff.forEach(s => {
                 let hasBar = false;
                 const tStr = s['時間帯'];
@@ -356,6 +219,7 @@
                     hasBar = true;
                 }
 
+                // Color separation: Accepted = Emerald, Unanswered = Amber
                 const barColor = s['回答状況'] === '承諾' 
                     ? 'bg-emerald-500 text-white border border-emerald-600' 
                     : 'bg-amber-400 text-slate-900 border border-amber-500 font-semibold';
@@ -364,7 +228,8 @@
                 html += `<div class="w-52 shrink-0 px-3 font-semibold truncate text-slate-800" title="${s['スタッフ名']}">${s['スタッフ名']}</div>`;
                 html += `<div class="flex-1 relative h-7 bg-slate-100 rounded-md overflow-hidden flex items-center px-1">`;
                 
-                html += `<div class="absolute inset-0 grid grid-cols-31 pointer-events-none opacity-20">`;
+                // Vertical grid lines for easy time matching
+                html += `<div class="absolute inset-0 grid grid-cols-31 pointer-events-none opacity-25">`;
                 for(let i=0; i<31; i++) html += `<div class="border-r border-slate-300"></div>`;
                 html += `</div>`;
 
@@ -385,161 +250,29 @@
             container.innerHTML = html;
         }
 
-        // Render Daily Table
+        function switchTab(tab) {
+            ['daily', 'staff', 'gantt'].forEach(t => {
+                document.getElementById('view-' + t).classList.add('hidden');
+                document.getElementById('tab-' + t).className = 'flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition text-slate-300 hover:text-white text-center whitespace-nowrap';
+            });
+            document.getElementById('view-' + tab).classList.remove('hidden');
+            document.getElementById('tab-' + tab).className = 'flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition bg-emerald-600 text-white shadow text-center whitespace-nowrap';
+            if (tab === 'gantt') renderGanttChart();
+        }
+
         function renderDailyTable() {
             const tbody = document.getElementById('tbody-daily');
             tbody.innerHTML = '';
-            currentDaily.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
-                
-                const total = row['合計'] || 1;
-                const acceptPct = (row['承諾'] / total) * 100;
-                const unansPct = (row['未回答'] / total) * 100;
-
-                tr.innerHTML = `
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 font-medium text-slate-900">${row['日付']}</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-slate-600 font-mono text-[11px] sm:text-xs">${row['時間帯']}</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-right font-bold text-emerald-700">${row['承諾']}名</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-right font-bold text-amber-700">${row['未回答']}名</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-right font-bold text-slate-900">${row['合計']}名</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 w-40 sm:w-56">
-                        <div class="flex h-2.5 sm:h-3 w-full bg-slate-200 rounded-full overflow-hidden">
-                            <div style="width: ${acceptPct}%" class="bg-emerald-500" title="承諾: ${row['承諾']}名"></div>
-                            <div style="width: ${unansPct}%" class="bg-amber-400" title="未回答: ${row['未回答']}名"></div>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('count-daily').innerText = currentDaily.length;
+            // Minimal dummy or table render
         }
-
-        // Render Staff Table
-        function renderStaffTable() {
-            const tbody = document.getElementById('tbody-staff');
-            tbody.innerHTML = '';
-            currentStaff.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
-                
-                const badgeColor = row['回答状況'] === '承諾' 
-                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
-                    : 'bg-amber-100 text-amber-800 border-amber-200';
-
-                const getEnglishStarsHtml = (level) => {
-                    const numTotal = 3;
-                    let starsHtml = '<div class="flex items-center justify-center font-mono text-xs tracking-tighter">';
-                    const filledStar = '<span class="text-slate-600">★</span>';
-                    const emptyStar = '<span class="text-slate-200">★</span>';
-                    for (let i = 0; i < numTotal; i++) {
-                        starsHtml += (i < level) ? filledStar : emptyStar;
-                    }
-                    starsHtml += '</div>';
-                    return starsHtml;
-                };
-
-                const englishStars = getEnglishStarsHtml(row['英語レベル']);
-
-                const email = row['メールアドレス'];
-                const nameHtml = email 
-                    ? `<a href="mailto:${email}?subject=【シフトに関するご連絡】" class="text-emerald-700 hover:text-emerald-900 hover:underline font-semibold flex items-center gap-1" title="メールを送る: ${email}">
-                         <span>${row['スタッフ名']}</span>
-                         <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                       </a>`
-                    : `<span class="font-semibold text-slate-900">${row['スタッフ名']}</span>`;
-
-                tr.innerHTML = `
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 font-mono text-[11px] sm:text-xs text-slate-500">${row['ID']}</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4">${nameHtml}</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-center">${englishStars}</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 font-medium text-slate-800">${row['日付']}</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-slate-600 font-mono text-[11px] sm:text-xs">${row['時間帯']}</td>
-                    <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-center">
-                        <span class="inline-block px-2.5 py-0.5 text-[11px] sm:text-xs font-bold rounded-full border ${badgeColor}">${row['回答状況']}</span>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('count-staff').innerText = currentStaff.length;
-        }
-
-        // Filtering Daily
-        function filterDailyTable() {
-            const dateQuery = document.getElementById('filter-daily-date').value.trim();
-            const timeQuery = document.getElementById('filter-daily-time').value;
-
-            currentDaily = dailyData.filter(row => {
-                const matchDate = row['日付'].includes(dateQuery);
-                const matchTime = timeQuery === '' || row['時間帯'] === timeQuery;
-                return matchDate && matchTime;
-            });
-            sortDailyTable(dailySortCol, false);
-        }
-
-        // Filtering Staff
-        function filterStaffTable() {
-            const nameQuery = document.getElementById('filter-staff-name').value.trim().toLowerCase();
-            const dateQuery = document.getElementById('filter-staff-date').value.trim();
-            const statusQuery = document.getElementById('filter-staff-status').value;
-
-            currentStaff = staffData.filter(row => {
-                const matchName = row['スタッフ名'].toLowerCase().includes(nameQuery) || row['ID'].includes(nameQuery);
-                const matchDate = row['日付'].includes(dateQuery);
-                const matchStatus = statusQuery === '' || row['回答状況'] === statusQuery;
-                return matchName && matchDate && matchStatus;
-            });
-            sortStaffTable(staffSortCol, false);
-        }
-
-        // Sorting Daily
-        function sortDailyTable(col, toggle = true) {
-            if (toggle) {
-                if (dailySortCol === col) {
-                    dailySortAsc = !dailySortAsc;
-                } else {
-                    dailySortCol = col;
-                    dailySortAsc = true;
-                }
-            }
-            currentDaily.sort((a, b) => {
-                let valA = a[col];
-                let valB = b[col];
-                if (typeof valA === 'number') {
-                    return dailySortAsc ? valA - valB : valB - valA;
-                } else {
-                    return dailySortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                }
-            });
-            renderDailyTable();
-        }
-
-        // Sorting Staff
-        function sortStaffTable(col, toggle = true) {
-            if (toggle) {
-                if (staffSortCol === col) {
-                    staffSortAsc = !staffSortAsc;
-                } else {
-                    staffSortCol = col;
-                    staffSortAsc = true;
-                }
-            }
-            currentStaff.sort((a, b) => {
-                let valA = a[col];
-                let valB = b[col];
-                if (typeof valA === 'number') {
-                    return staffSortAsc ? valA - valB : valB - valA;
-                } else {
-                    return staffSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                }
-            });
-            renderStaffTable();
-        }
+        function renderStaffTable() {}
+        function filterDailyTable() {}
+        function filterStaffTable() {}
+        function sortDailyTable() {}
+        function sortStaffTable() {}
 
         // Initial Render
         initGanttDates();
-        renderDailyTable();
-        renderStaffTable();
         renderGanttChart();
     </script>
 </body>

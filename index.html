@@ -31,7 +31,7 @@
             <!-- Date Selector -->
             <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
                 <label class="text-xs text-slate-300 font-semibold whitespace-nowrap">表示日:</label>
-                <select id="gantt-date-select" onchange="renderGanttChart()" class="bg-slate-900 text-white px-2 py-1 text-xs rounded border border-slate-600 focus:outline-none">
+                <select id="gantt-date-select" onchange="renderGanttChart()" class="bg-slate-900 text-white px-2 py-1 text-xs rounded border border-slate-600 focus:outline-none font-medium">
                     <!-- Populated via JS -->
                 </select>
             </div>
@@ -40,8 +40,8 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-6">
-        <!-- Legend & Status -->
-        <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <!-- Controls & Legend -->
+        <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
             <div class="flex flex-wrap items-center gap-4">
                 <span class="font-bold text-slate-700">凡例:</span>
                 <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-indigo-600 rounded-sm inline-block"></span> 競技セッション</span>
@@ -49,8 +49,14 @@
                 <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> 承諾スタッフ</span>
                 <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-400 rounded-sm inline-block"></span> 未回答スタッフ</span>
             </div>
-            <div class="text-slate-500 text-[11px]">
-                ※スタッフ名クリックでメール起動✉
+            <!-- Sort Toggle -->
+            <div class="flex items-center gap-2">
+                <label class="font-semibold text-slate-600 whitespace-nowrap">スタッフ並び替え:</label>
+                <select id="gantt-sort-select" onchange="renderGanttChart()" class="px-2.5 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-medium bg-white">
+                    <option value="status">回答状況順（承諾 → 未回答）</option>
+                    <option value="name">スタッフ名順（五十音）</option>
+                    <option value="time">開始時間順</option>
+                </select>
             </div>
         </div>
 
@@ -141,10 +147,26 @@
 
         function renderGanttChart() {
             const dateVal = document.getElementById('gantt-date-select').value || '09月25日';
+            const sortMode = document.getElementById('gantt-sort-select').value;
             const container = document.getElementById('gantt-content');
             
-            const dayStaff = staffData.filter(s => s.日付 === dateVal);
+            let dayStaff = staffData.filter(s => s.日付 === dateVal);
             const dayComps = competitionSchedules[dateVal] || [];
+
+            // Sorting logic for staff
+            dayStaff.sort((a, b) => {
+                if (sortMode === 'status') {
+                    // 承諾 first, then 未回答
+                    if (a['回答状況'] === '承諾' && b['回答状況'] !== '承諾') return -1;
+                    if (a['回答状況'] !== '承諾' && b['回答状況'] === '承諾') return 1;
+                    return a['スタッフ名'].localeCompare(b['スタッフ名']);
+                } else if (sortMode === 'name') {
+                    return a['スタッフ名'].localeCompare(b['スタッフ名']);
+                } else if (sortMode === 'time') {
+                    return a['時間帯'].localeCompare(b['時間帯']);
+                }
+                return 0;
+            });
 
             const hours = [];
             for (let h = 7; h <= 22; h++) {
@@ -193,7 +215,7 @@
                 html += `</div>`;
             }
 
-            // 2. Staff Shifts Section (Split by Accepted vs Unanswered)
+            // 2. Staff Shifts Section
             html += `<div class="text-[11px] font-bold text-slate-700 px-3 mb-2 flex items-center gap-1.5">👥 ボランティアスタッフ稼働状況（ガントチャート照合）</div>`;
             html += `<div class="space-y-2">`;
             
@@ -219,16 +241,24 @@
                     hasBar = true;
                 }
 
-                // Color separation: Accepted = Emerald, Unanswered = Amber
+                // Status color: Accepted = Emerald, Unanswered = Amber
                 const barColor = s['回答状況'] === '承諾' 
                     ? 'bg-emerald-500 text-white border border-emerald-600' 
                     : 'bg-amber-400 text-slate-900 border border-amber-500 font-semibold';
 
+                const email = s['メールアドレス'];
+                const nameHtml = email 
+                    ? `<a href="mailto:${email}?subject=【シフトに関するご連絡】" class="text-slate-800 hover:text-emerald-700 hover:underline font-semibold flex items-center gap-1 truncate" title="メールを送る: ${email}">
+                         <span>${s['スタッフ名']}</span>
+                         <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                       </a>`
+                    : `<span>${s['スタッフ名']}</span>`;
+
                 html += `<div class="flex items-center text-xs hover:bg-slate-50 py-1.5 rounded transition">`;
-                html += `<div class="w-52 shrink-0 px-3 font-semibold truncate text-slate-800" title="${s['スタッフ名']}">${s['スタッフ名']}</div>`;
+                html += `<div class="w-52 shrink-0 px-3 truncate">${nameHtml}</div>`;
                 html += `<div class="flex-1 relative h-7 bg-slate-100 rounded-md overflow-hidden flex items-center px-1">`;
                 
-                // Vertical grid lines for easy time matching
+                // Vertical grid lines
                 html += `<div class="absolute inset-0 grid grid-cols-31 pointer-events-none opacity-25">`;
                 for(let i=0; i<31; i++) html += `<div class="border-r border-slate-300"></div>`;
                 html += `</div>`;
@@ -249,27 +279,6 @@
 
             container.innerHTML = html;
         }
-
-        function switchTab(tab) {
-            ['daily', 'staff', 'gantt'].forEach(t => {
-                document.getElementById('view-' + t).classList.add('hidden');
-                document.getElementById('tab-' + t).className = 'flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition text-slate-300 hover:text-white text-center whitespace-nowrap';
-            });
-            document.getElementById('view-' + tab).classList.remove('hidden');
-            document.getElementById('tab-' + tab).className = 'flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition bg-emerald-600 text-white shadow text-center whitespace-nowrap';
-            if (tab === 'gantt') renderGanttChart();
-        }
-
-        function renderDailyTable() {
-            const tbody = document.getElementById('tbody-daily');
-            tbody.innerHTML = '';
-            // Minimal dummy or table render
-        }
-        function renderStaffTable() {}
-        function filterDailyTable() {}
-        function filterStaffTable() {}
-        function sortDailyTable() {}
-        function sortStaffTable() {}
 
         // Initial Render
         initGanttDates();

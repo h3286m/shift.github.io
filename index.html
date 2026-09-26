@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シフト・競技スケジュール照合ボード（アラート機能付き）</title>
+    <title>シフト・競技スケジュール照合ボード</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -26,7 +26,7 @@
                     <svg class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     <span>シフト・競技スケジュール照合ボード</span>
                 </h1>
-                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">人員ギャップ・長時間労働アラート搭載版</p>
+                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">アーティスティックスイミング大会対応・ガントチャート照合（ID表記・レイアウト最適化）</p>
             </div>
             <!-- Date Selector -->
             <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
@@ -44,15 +44,15 @@
         <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
             <div class="flex flex-wrap items-center gap-4">
                 <span class="font-bold text-slate-700">凡例:</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-rose-600 rounded-sm inline-block"></span> 開場時間</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-indigo-600 rounded-sm inline-block"></span> 競技</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-sky-500 rounded-sm inline-block"></span> 練習</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> 承諾(緑)</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-400 rounded-sm inline-block"></span> 未回答(黄)</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-rose-600 rounded-sm inline-block"></span> 開場時間 (1h前)</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-indigo-600 rounded-sm inline-block"></span> 競技セッション</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-sky-500 rounded-sm inline-block"></span> 公式練習</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> 承諾スタッフ</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-400 rounded-sm inline-block"></span> 未回答スタッフ</span>
             </div>
             <!-- Sort Toggle -->
             <div class="flex items-center gap-2">
-                <label class="font-semibold text-slate-600 whitespace-nowrap">並び替え:</label>
+                <label class="font-semibold text-slate-600 whitespace-nowrap">スタッフ並び替え:</label>
                 <select id="gantt-sort-select" onchange="renderGanttChart()" class="px-2.5 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-medium bg-white">
                     <option value="status">回答状況順（承諾 → 未回答）</option>
                     <option value="name">スタッフ名順（五十音）</option>
@@ -62,7 +62,7 @@
         </div>
 
         <!-- Gantt Chart Container -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 overflow-hidden space-y-4">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 overflow-hidden">
             <div id="gantt-content" class="overflow-x-auto">
                 <!-- Rendered via JS -->
             </div>
@@ -72,15 +72,15 @@
         <div class="bg-gradient-to-br from-emerald-50 to-slate-50 rounded-xl shadow-sm border border-emerald-200 p-4 sm:p-6 space-y-4">
             <h3 class="text-sm font-bold text-emerald-900 flex items-center gap-2">
                 <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                📋 運営・シフト管理のポイント（自動インサイト・アラート）
+                📋 運営・シフト管理のポイント（自動インサイト）
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs space-y-1.5">
                     <span class="font-bold text-slate-800 flex items-center gap-1.5 text-emerald-700">
-                        🔥 ピーク時間帯 & 不足アラート
+                        🔥 ピーク時間帯
                     </span>
                     <p class="text-slate-600 leading-relaxed">
-                        ガントチャート下部の人数カウンターにて、<b>3人未満</b>の時間帯は赤色アラートが表示されます。開場時間（10時・16時）や競技開始前に人員が不足していないか確認してください。
+                        大会開催日（26日〜28日）は <b>10:00 〜 18:00</b> の時間帯にスタッフが集中し、公式練習や各種競技の進行を手厚くサポートする体制となっています。
                     </p>
                 </div>
                 <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs space-y-1.5">
@@ -93,10 +93,10 @@
                 </div>
                 <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs space-y-1.5">
                     <span class="font-bold text-slate-800 flex items-center gap-1.5 text-blue-700">
-                        ⏳ 6時間以上勤務の長時間アラート
+                        ⏳ 長時間勤務スタッフ
                     </span>
                     <p class="text-slate-600 leading-relaxed">
-                        6時間以上の勤務を行うスタッフには自動で <b>⚠️ 6h超アラート</b> が表示されます。こまめな小休憩のローテーションにお役立てください。
+                        6〜8時間のフルタイム勤務を担当するメンバーが多数います。長時間の立ち仕事になるため、こまめな小休憩のローテーションを組むことをお勧めします。
                     </p>
                 </div>
             </div>
@@ -134,7 +134,7 @@
             ]
         };
 
-        const staffData = [{"ID": "212", "スタッフ名": "桑原 隆", "メールアドレス": "tett12112907@i.softbank.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "1116", "スタッフ名": "池谷 敦代", "メールアドレス": "ike-toto-eme-101146-chan-chan@disney.ne.jp", "英語レベル": 1, "日付": "09月28日", "時間帯": "10:00-17:30", "回答状況": "承諾"}, {"ID": "1386", "スタッフ名": "森川 重一", "メールアドレス": "shigemorikawa@yahoo.co.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月28日", "時間帯": "10:00-14:00", "回答状況": "承諾"}, {"ID": "2740", "スタッフ名": "樋口 京一", "メールアドレス": "abidpk9967@yahoo.ne.jp", "英語レベル": 0, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "未回答"}, {"ID": "3896", "スタッフ名": "小木 嘉男", "メールアドレス": "lefty.o.3rd@gmail.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-14:00", "回答状況": "承諾"}, {"ID": "4213", "スタッフ名": "宇田 真彦", "メールアドレス": "m21339170u@gmail.com", "英語レベル": 3, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "セレモニーボランティア", "回答状況": "承諾"}, {"ID": "7953", "スタッフ名": "敦賀 恭子", "メールアドレス": "k.lemon.707.sea.dive@gmail.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "12097", "スタッフ名": "宮本 陽介", "メールアドレス": "y.miyamoto2784@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "12975", "スタッフ名": "横井 真理子", "メールアドレス": "marikon-kon@docomo.ne.jp", "英語レベル": 3, "日付": "09月28日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "12976", "スタッフ名": "橋本 玉美", "メールアドレス": "tata117yn@docomo.ne.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "12976", "スタッフ名": "橋本 玉美", "メールアドレス": "tata117yn@docomo.ne.jp", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "13032", "スタッフ名": "飯田 渚月", "メールアドレス": "nattsu0905@docomo.ne.jp", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "14574", "スタッフ名": "松浦 佳音", "メールアドレス": "kanon.1911k@ezweb.ne.jp", "英語レベル": 1, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "未回答"}, {"ID": "17600", "スタッフ名": "鈴木 久江", "メールアドレス": "scrum138@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月27日", "時間帯": "15:00-19:00", "回答状況": "承諾"}, {"ID": "29253", "スタッフ名": "鈴木 麻彩香", "メールアドレス": "azuma0104asaka@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "10:00-19:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月28日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "承諾"}, {"ID": "38547", "スタッフ名": "大海 充輝", "メールアドレス": "mickey0307006@gmail.com", "英語レベル": 0, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "39880", "スタッフ名": "佐伯 美侑", "メールアドレス": "ohifam2528@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "15:00-18:00", "回答状況": "承諾"}, {"ID": "24184", "スタッフ名": "LEONG WEIEN", "メールアドレス": "hengsleong@gmail.com", "英語レベル": 3, "日付": "09月28日", "時間帯": "10:00-20:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-14:00", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月25日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "7928", "スタッフ名": "古井  良周", "メールアドレス": "yfurui1985bmw@yahoo.co.jp", "英語レベル": 0, "日付": "09月25日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "メールアドレス": "hiro0047@hotmail.com", "英語レベル": 1, "日付": "09月25日", "時間帯": "16:00-19:00", "回答状況": "承諾"}, {"ID": "27557", "スタッフ名": "青木 基泰", "メールアドレス": "mokky.8750.128@gmail.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "10:00-13:30", "回答状況": "承諾"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月25日", "時間帯": "15:00-19:00", "回答状況": "承諾"}, {"ID": "37282", "スタッフ名": "八木 竣", "メールアドレス": "goatsyun1924@gmail.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "10:00-20:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月25日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38513", "スタッフ名": "水谷 幸枝", "メールアドレス": "tada_kumada@milk.tnc.ne.jp", "英語レベル": 1, "日付": "09月25日", "時間帯": "13:30-18:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月26日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "メールアドレス": "hiro0047@hotmail.com", "英語レベル": 1, "日付": "09月26日", "時間帯": "16:00-19:00", "回答状況": "承諾"}, {"ID": "27557", "スタッフ名": "青木 基泰", "メールアドレス": "mokky.8750.128@gmail.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "10:00-13:30", "回答状況": "承諾"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月26日", "時間帯": "15:00-19:00", "回答状況": "承諾"}, {"ID": "37282", "スタッフ名": "八木 竣", "メールアドレス": "goatsyun1924@gmail.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "10:00-20:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月26日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38513", "スタッフ名": "水谷 幸枝", "メールアドレス": "tada_kumada@milk.tnc.ne.jp", "英語レベル": 1, "日付": "09月26日", "時間帯": "13:30-18:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "08:00-14:30", "回答状況": "承諾"}];
+        const staffData = [{"ID": "212", "スタッフ名": "桑原 隆", "メールアドレス": "tett12112907@i.softbank.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "1116", "スタッフ名": "池谷 敦代", "メールアドレス": "ike-toto-eme-101146-chan-chan@disney.ne.jp", "英語レベル": 1, "日付": "09月28日", "時間帯": "10:00-17:30", "回答状況": "承諾"}, {"ID": "1386", "スタッフ名": "森川 重一", "メールアドレス": "shigemorikawa@yahoo.co.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月28日", "時間帯": "10:00-14:00", "回答状況": "承諾"}, {"ID": "2740", "スタッフ名": "樋口 京一", "メールアドレス": "abidpk9967@yahoo.ne.jp", "英語レベル": 0, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "未回答"}, {"ID": "3896", "スタッフ名": "小木 嘉男", "メールアドレス": "lefty.o.3rd@gmail.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-14:00", "回答状況": "承諾"}, {"ID": "4213", "スタッフ名": "宇田 真彦", "メールアドレス": "m21339170u@gmail.com", "英語レベル": 3, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "セレモニーボランティア", "回答状況": "承諾"}, {"ID": "7953", "スタッフ名": "敦賀 恭子", "メールアドレス": "k.lemon.707.sea.dive@gmail.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "12097", "スタッフ名": "宮本 陽介", "メールアドレス": "y.miyamoto2784@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "12975", "スタッフ名": "横井 真理子", "メールアドレス": "marikon-kon@docomo.ne.jp", "英語レベル": 3, "日付": "09月28日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "12976", "スタッフ名": "橋本 玉美", "メールアドレス": "tata117yn@docomo.ne.jp", "英語レベル": 2, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "12976", "スタッフ名": "橋本 玉美", "メールアドレス": "tata117yn@docomo.ne.jp", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-18:00", "回答状況": "承諾"}, {"ID": "13032", "スタッフ名": "飯田 渚月", "メールアドレス": "nattsu0905@docomo.ne.jp", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "14574", "スタッフ名": "松浦 佳音", "メールアドレス": "kanon.1911k@ezweb.ne.jp", "英語レベル": 1, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "未回答"}, {"ID": "17600", "スタッフ名": "鈴木 久江", "メールアドレス": "scrum138@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月27日", "時間帯": "15:00-19:00", "回答状況": "承諾"}, {"ID": "29253", "スタッフ名": "鈴木 麻彩香", "メールアドレス": "azuma0104asaka@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "10:00-19:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月28日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38266", "スタッフ名": "横田 千紗", "メールアドレス": "kgm24sen34oto@icloud.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "10:00-21:30", "回答状況": "承諾"}, {"ID": "38547", "スタッフ名": "大海 充輝", "メールアドレス": "mickey0307006@gmail.com", "英語レベル": 0, "日付": "09月27日", "時間帯": "08:00-14:30", "回答状況": "未回答"}, {"ID": "39880", "スタッフ名": "佐伯 美侑", "メールアドレス": "ohifam2528@gmail.com", "英語レベル": 1, "日付": "09月27日", "時間帯": "13:30-21:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月27日", "時間帯": "15:00-18:00", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月28日", "時間帯": "10:00-14:00", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月25日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "7928", "スタッフ名": "古井  良周", "メールアドレス": "yfurui1985bmw@yahoo.co.jp", "英語レベル": 0, "日付": "09月25日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "メールアドレス": "hiro0047@hotmail.com", "英語レベル": 1, "日付": "09月25日", "時間帯": "16:00-19:00", "回答状況": "承諾"}, {"ID": "27557", "スタッフ名": "青木 基泰", "メールアドレス": "mokky.8750.128@gmail.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "10:00-13:30", "回答状況": "承諾"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月25日", "時間帯": "15:00-19:00", "回答状況": "承諾"}, {"ID": "37282", "スタッフ名": "八木 竣", "メールアドレス": "goatsyun1924@gmail.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "10:00-20:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月25日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38513", "スタッフ名": "水谷 幸枝", "メールアドレス": "tada_kumada@milk.tnc.ne.jp", "英語レベル": 1, "日付": "09月25日", "時間帯": "13:30-18:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月25日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "1425", "スタッフ名": "藤島 弘通", "メールアドレス": "hiromiti@jb3.so-net.ne.jp", "英語レベル": 1, "日付": "09月26日", "時間帯": "10:00-13:00", "回答状況": "承諾"}, {"ID": "5351", "スタッフ名": "大石 雅樹", "メールアドレス": "masaki.1222@icloud.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "27099", "スタッフ名": "鈴木 浩久", "メールアドレス": "hiro0047@hotmail.com", "英語レベル": 1, "日付": "09月26日", "時間帯": "16:00-19:00", "回答状況": "承諾"}, {"ID": "27557", "スタッフ名": "青木 基泰", "メールアドレス": "mokky.8750.128@gmail.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "10:00-13:30", "回答状況": "承諾"}, {"ID": "28057", "スタッフ名": "徳増 壮馬", "メールアドレス": "gomyway1207@yahoo.co.jp", "英語レベル": 0, "日付": "09月26日", "時間帯": "15:00-19:00", "回答状況": "承諾"}, {"ID": "37282", "スタッフ名": "八木 竣", "メールアドレス": "goatsyun1924@gmail.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "10:00-20:30", "回答状況": "承諾"}, {"ID": "37664", "スタッフ名": "宮尾 清佳", "メールアドレス": "qingjia0129@gmail.com", "英語レベル": 1, "日付": "09月26日", "時間帯": "08:00-14:30", "回答状況": "承諾"}, {"ID": "38513", "スタッフ名": "水谷 幸枝", "メールアドレス": "tada_kumada@milk.tnc.ne.jp", "英語レベル": 1, "日付": "09月26日", "時間帯": "13:30-18:30", "回答状況": "承諾"}, {"ID": "39920", "スタッフ名": "和田 佳穏", "メールアドレス": "kanokanokanomi@gmail.com", "英語レベル": 2, "日付": "09月26日", "時間帯": "08:00-14:30", "回答状況": "承諾"}];
 
         function initGanttDates() {
             const select = document.getElementById('gantt-date-select');
@@ -221,7 +221,7 @@
                 html += `</div>`;
             }
 
-            // 2. Staff Shifts Section with Active Headcount Calculation & 6h+ Shift Alerts
+            // 2. Staff Shifts Section
             html += `<div class="text-[11px] font-bold text-slate-700 px-3 mb-2 flex items-center justify-between">`;
             html += `<span class="flex items-center gap-1.5">👥 ボランティアスタッフ稼働状況（ガントチャート照合）</span>`;
             html += `<span class="text-[10px] font-normal text-slate-500">※6h以上の勤務には ⏳ 警告バッジが表示されます</span>`;
@@ -232,7 +232,6 @@
                 html += `<div class="text-center py-4 text-slate-400 text-xs">この日のスタッフシフト登録はありません。</div>`;
             }
 
-            // Helper to compute hours
             function getDurationHours(timeStr) {
                 const match = String(timeStr).match(/(\d{2}):(\d{2})-(\d{2}):(\d{2})/);
                 if (match) {
@@ -243,7 +242,6 @@
                 return 0;
             }
 
-            // Compute active accepted headcount per 30-min slot for gap alerts
             const slotAcceptedCounts = {};
             hours.forEach(h => slotAcceptedCounts[h] = 0);
             
@@ -322,17 +320,17 @@
                 html += `</div></div>`;
             });
 
-            // 3. Headcount / Gap Alert Row at the bottom of Gantt
+            // 3. Headcount / Gap Alert Row at the bottom of Gantt (Fixed horizontal layout without vertical wrapping)
             html += `<div class="flex items-center text-xs pt-2 mt-2 border-t border-slate-200 font-mono text-slate-600 bg-slate-50 p-2 rounded-lg">`;
-            html += `<div class="w-56 shrink-0 px-3 font-sans font-bold text-slate-700 flex items-center gap-1">📊 時間帯別 承諾人数:</div>`;
-            html += `<div class="flex-1 grid grid-cols-31 text-center text-[10px]">`;
+            html += `<div class="w-56 shrink-0 px-3 font-sans font-bold text-slate-700 flex items-center gap-1">📊 承諾人数:</div>`;
+            html += `<div class="flex-1 grid grid-cols-31 text-center text-[10px] whitespace-nowrap">`;
             for (let i = 0; i < hours.length; i++) {
                 const h = hours[i];
                 const count = slotAcceptedCounts[h] || 0;
-                const isLow = count < 3 && (i >= 16 && i <= 36); // e.g., between 8:00 and 18:00
-                const badgeStyle = isLow ? 'bg-rose-100 text-rose-700 font-bold px-0.5 rounded' : 'text-slate-700';
+                const isLow = count < 3 && (i >= 6 && i <= 36); 
+                const badgeStyle = isLow ? 'bg-rose-100 text-rose-700 font-bold px-1 rounded' : 'text-slate-700';
                 if (i % 2 === 0) {
-                    html += `<div class="col-span-2 text-left pl-1"><span class="${badgeStyle}">${count}名</span></div>`;
+                    html += `<div class="col-span-2 text-left pl-0.5"><span class="${badgeStyle}">${count}名</span></div>`;
                 }
             }
             html += `</div></div>`;
